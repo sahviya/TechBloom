@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Journal from "@/pages/journal";
 import Community from "@/pages/community";
+import Genie from "@/pages/genie";
 import Profile from "@/pages/profile";
 import Media from "@/pages/media";
 import Games from "@/pages/games";
@@ -45,6 +46,7 @@ function Router() {
               <Route path="/" component={Dashboard} />
               <Route path="/journal" component={Journal} />
               <Route path="/community" component={Community} />
+              <Route path="/genie" component={Genie} />
               <Route path="/profile" component={Profile} />
               <Route path="/media" component={Media} />
               <Route path="/games" component={Games} />

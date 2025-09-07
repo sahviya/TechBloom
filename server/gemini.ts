@@ -10,7 +10,7 @@ export interface GenieResponse {
 
 export async function chatWithGenie(userMessage: string, context?: string): Promise<GenieResponse> {
   try {
-    const systemPrompt = `You are a supportive AI companion called "Genie" in the MindBloom wellness app. 
+    const systemPrompt = `You are a supportive AI companion called "Ur Genie" in the MindBloom wellness app. 
     You embody the wisdom and magical support of a caring genie friend. Your role is to:
     
     - Provide empathetic, supportive responses to users sharing their thoughts and feelings
@@ -44,8 +44,7 @@ export async function chatWithGenie(userMessage: string, context?: string): Prom
             tone: { type: "string", enum: ["supportive", "encouraging", "empathetic", "motivational"] },
             suggestions: { 
               type: "array", 
-              items: { type: "string" },
-              optional: true 
+              items: { type: "string" }
             },
           },
           required: ["message", "tone"],

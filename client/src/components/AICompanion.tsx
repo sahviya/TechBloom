@@ -187,7 +187,7 @@ export default function AICompanion() {
             <div className="w-8 h-8 mr-2 genie-gradient rounded-full flex items-center justify-center float">
               <i className="fas fa-robot text-primary-foreground text-sm"></i>
             </div>
-            Your Genie Guide
+            Ur Genie
           </h3>
           <div className="flex space-x-2">
             <Button
