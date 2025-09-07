@@ -40,6 +40,7 @@ export default function Navigation() {
     { path: "/", label: "Home", icon: "fas fa-home" },
     { path: "/journal", label: "Journal", icon: "fas fa-feather-alt" },
     { path: "/community", label: "Community", icon: "fas fa-users" },
+    { path: "/snap", label: "Snap", icon: "fas fa-camera" },
     { path: "/genie", label: "Ur Genie", icon: "fas fa-robot" },
     { path: "/media", label: "Media", icon: "fas fa-play-circle" },
     { path: "/games", label: "Games", icon: "fas fa-gamepad" },
