@@ -9,6 +9,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Journal from "@/pages/journal";
 import Community from "@/pages/community";
+import Snap from "@/pages/snap";
 import Genie from "@/pages/genie";
 import Profile from "@/pages/profile";
 import Media from "@/pages/media";
@@ -46,6 +47,7 @@ function Router() {
               <Route path="/" component={Dashboard} />
               <Route path="/journal" component={Journal} />
               <Route path="/community" component={Community} />
+              <Route path="/snap" component={Snap} />
               <Route path="/genie" component={Genie} />
               <Route path="/profile" component={Profile} />
               <Route path="/media" component={Media} />

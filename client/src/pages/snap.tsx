@@ -29,13 +29,17 @@ export default function Snap() {
 
   const shareToCommunityMutation = useMutation({
     mutationFn: async (data: { content: string; imageBase64: string }) => {
-      return apiRequest("/api/community/posts", {
+      const response = await fetch("/api/community/posts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
+      if (!response.ok) {
+        throw new Error('Failed to share post');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/community/posts"] });
