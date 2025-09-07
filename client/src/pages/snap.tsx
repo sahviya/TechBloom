@@ -21,6 +21,7 @@ export default function Snap() {
   const [selectedFilter, setSelectedFilter] = useState("none");
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [cameraReady, setCameraReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -67,6 +68,9 @@ export default function Snap() {
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        videoRef.current.onloadedmetadata = () => {
+          setCameraReady(true);
+        };
       }
     } catch (error) {
       toast({
@@ -81,6 +85,7 @@ export default function Snap() {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
+      setCameraReady(false);
     }
   }, [stream]);
 
@@ -90,17 +95,24 @@ export default function Snap() {
       const video = videoRef.current;
       const context = canvas.getContext("2d");
       
-      if (context) {
+      if (context && video.videoWidth > 0 && video.videoHeight > 0) {
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0);
         
         const imageData = canvas.toDataURL("image/jpeg", 0.6);
+        console.log("Captured image data length:", imageData.length);
         setCapturedImage(imageData);
         stopCamera();
+      } else {
+        toast({
+          title: "Camera Error",
+          description: "Unable to capture photo. Please ensure camera is ready.",
+          variant: "destructive",
+        });
       }
     }
-  }, [stopCamera]);
+  }, [stopCamera, toast]);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -218,7 +230,11 @@ export default function Snap() {
                   src={capturedImage}
                   alt="Captured"
                   className="w-full h-full object-cover"
-                  style={{ ...(currentFilter && currentFilter.style ? { filter: currentFilter.style.split(': ')[1] } : {}) }}
+                  style={{ 
+                    filter: currentFilter && currentFilter.style && currentFilter.id !== 'none' 
+                      ? currentFilter.style.split(': ')[1] 
+                      : 'none' 
+                  }}
                 />
               )}
 
@@ -238,10 +254,15 @@ export default function Snap() {
                 <Button
                   size="lg"
                   onClick={capturePhoto}
-                  className="genie-gradient w-16 h-16 rounded-full"
+                  disabled={!cameraReady}
+                  className={`w-16 h-16 rounded-full ${cameraReady ? "genie-gradient" : "bg-muted"}`}
                   data-testid="capture-photo"
                 >
-                  <i className="fas fa-camera text-xl"></i>
+                  {cameraReady ? (
+                    <i className="fas fa-camera text-xl"></i>
+                  ) : (
+                    <i className="fas fa-spinner fa-spin text-xl"></i>
+                  )}
                 </Button>
               </div>
             )}
