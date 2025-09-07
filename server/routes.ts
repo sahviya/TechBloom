@@ -134,9 +134,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/community/posts', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
+      const { imageBase64, ...bodyData } = req.body;
+      
+      let imageUrl = null;
+      
+      // Handle base64 image if provided
+      if (imageBase64 && typeof imageBase64 === 'string') {
+        // For now, we'll store the base64 directly as the imageUrl
+        // In a production app, you'd upload to a service like Cloudinary or AWS S3
+        imageUrl = imageBase64;
+      }
+      
       const postData = insertCommunityPostSchema.parse({
-        ...req.body,
+        ...bodyData,
         userId,
+        imageUrl,
       });
 
       const post = await storage.createCommunityPost(postData);
