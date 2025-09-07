@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 const languages = [
   { code: "en", name: "English" },
@@ -33,6 +34,7 @@ export default function Navigation() {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const [language, setLanguage] = useState("en");
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navItems = [
     { path: "/", label: "Home", icon: "fas fa-home" },
@@ -46,39 +48,108 @@ export default function Navigation() {
 
   return (
     <>
-      {/* Desktop Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
-        <div className="container mx-auto px-4 py-4">
+      {/* Desktop Sidebar */}
+      <aside className={cn(
+        "hidden md:flex flex-col bg-card border-r border-border transition-all duration-300",
+        isCollapsed ? "w-16" : "w-64"
+      )}>
+        {/* Header */}
+        <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between">
-            {/* Logo */}
             <Link href="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 genie-gradient rounded-full flex items-center justify-center glow-effect">
+              <div className="w-10 h-10 genie-gradient rounded-full flex items-center justify-center glow-effect shrink-0">
                 <i className="fas fa-magic text-primary-foreground text-lg"></i>
               </div>
-              <h1 className="text-2xl font-serif font-bold text-primary">MindBloom</h1>
+              {!isCollapsed && (
+                <h1 className="text-xl font-serif font-bold text-primary">MindBloom</h1>
+              )}
             </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="p-2"
+              data-testid="sidebar-toggle"
+            >
+              <i className={`fas fa-${isCollapsed ? 'angle-right' : 'angle-left'}`}></i>
+            </Button>
+          </div>
+        </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
-              {navItems.map((item) => (
-                <Link key={item.path} href={item.path}>
-                  <Button
-                    variant={location === item.path ? "default" : "ghost"}
-                    className={location === item.path ? "genie-gradient" : ""}
-                    data-testid={`nav-${item.label.toLowerCase()}`}
-                  >
-                    <i className={`${item.icon} mr-2`}></i>
-                    {item.label}
-                  </Button>
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-2">
+          {navItems.map((item) => (
+            <Link key={item.path} href={item.path}>
+              <Button
+                variant={location === item.path ? "default" : "ghost"}
+                className={cn(
+                  "w-full justify-start",
+                  location === item.path && "genie-gradient",
+                  isCollapsed && "px-2"
+                )}
+                data-testid={`nav-${item.label.toLowerCase()}`}
+              >
+                <i className={`${item.icon} ${isCollapsed ? '' : 'mr-3'} w-4`}></i>
+                {!isCollapsed && item.label}
+              </Button>
+            </Link>
+          ))}
+        </nav>
+
+        {/* User Section */}
+        <div className="p-4 border-t border-border space-y-4">
+          {/* User Profile */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className={cn(
+                  "w-full justify-start p-2",
+                  isCollapsed && "justify-center"
+                )}
+                data-testid="profile-menu"
+              >
+                <Avatar className="w-8 h-8 shrink-0">
+                  <AvatarImage src={(user as any)?.profileImageUrl || undefined} />
+                  <AvatarFallback className="genie-gradient text-primary-foreground">
+                    {(user as any)?.firstName?.[0] || (user as any)?.email?.[0] || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                {!isCollapsed && (
+                  <div className="ml-3 text-left overflow-hidden">
+                    <p className="text-sm font-medium truncate">
+                      {(user as any)?.firstName || (user as any)?.email?.split("@")[0] || "User"}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {(user as any)?.email || ""}
+                    </p>
+                  </div>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align={isCollapsed ? "center" : "start"} side="right">
+              <DropdownMenuItem asChild>
+                <Link href="/profile">
+                  <i className="fas fa-user mr-2"></i>
+                  Profile
                 </Link>
-              ))}
-            </nav>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <a href="/api/logout">
+                  <i className="fas fa-sign-out-alt mr-2"></i>
+                  Logout
+                </a>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-            {/* User Controls */}
-            <div className="flex items-center space-x-4">
+          {/* Controls */}
+          {!isCollapsed && (
+            <div className="space-y-3">
               {/* Language Selector */}
               <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger className="w-32" data-testid="language-selector">
+                <SelectTrigger className="w-full" data-testid="language-selector">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -93,11 +164,12 @@ export default function Navigation() {
               {/* Theme Selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="icon" data-testid="theme-selector">
-                    <i className="fas fa-palette"></i>
+                  <Button variant="outline" className="w-full justify-start" data-testid="theme-selector">
+                    <i className="fas fa-palette mr-2"></i>
+                    Theme
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
+                <DropdownMenuContent align="start" side="right">
                   <DropdownMenuItem onClick={() => setTheme("light")}>
                     <i className="fas fa-sun mr-2"></i>
                     Light
@@ -112,42 +184,10 @@ export default function Navigation() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Profile */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center space-x-2" data-testid="profile-menu">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={user?.profileImageUrl || undefined} />
-                      <AvatarFallback className="genie-gradient text-primary-foreground">
-                        {user?.firstName?.[0] || user?.email?.[0] || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="hidden md:block font-medium">
-                      {user?.firstName || user?.email?.split("@")[0] || "User"}
-                    </span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile">
-                      <i className="fas fa-user mr-2"></i>
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href="/api/logout">
-                      <i className="fas fa-sign-out-alt mr-2"></i>
-                      Logout
-                    </a>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
             </div>
-          </div>
+          )}
         </div>
-      </header>
+      </aside>
 
       {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border md:hidden z-50">

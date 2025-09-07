@@ -32,24 +32,29 @@ function Router() {
 
   return (
     <div className="min-h-screen bg-background">
-      {isAuthenticated && <Navigation />}
-      <Switch>
-        {!isAuthenticated ? (
+      {!isAuthenticated ? (
+        <Switch>
           <Route path="/" component={Landing} />
-        ) : (
-          <>
-            <Route path="/" component={Dashboard} />
-            <Route path="/journal" component={Journal} />
-            <Route path="/community" component={Community} />
-            <Route path="/profile" component={Profile} />
-            <Route path="/media" component={Media} />
-            <Route path="/games" component={Games} />
-            <Route path="/books" component={Books} />
-            <Route path="/shopping" component={Shopping} />
-          </>
-        )}
-        <Route component={NotFound} />
-      </Switch>
+          <Route component={NotFound} />
+        </Switch>
+      ) : (
+        <div className="flex min-h-screen">
+          <Navigation />
+          <main className="flex-1">
+            <Switch>
+              <Route path="/" component={Dashboard} />
+              <Route path="/journal" component={Journal} />
+              <Route path="/community" component={Community} />
+              <Route path="/profile" component={Profile} />
+              <Route path="/media" component={Media} />
+              <Route path="/games" component={Games} />
+              <Route path="/books" component={Books} />
+              <Route path="/shopping" component={Shopping} />
+              <Route component={NotFound} />
+            </Switch>
+          </main>
+        </div>
+      )}
     </div>
   );
 }
