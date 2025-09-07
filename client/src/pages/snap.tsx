@@ -95,7 +95,7 @@ export default function Snap() {
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0);
         
-        const imageData = canvas.toDataURL("image/jpeg", 0.8);
+        const imageData = canvas.toDataURL("image/jpeg", 0.6);
         setCapturedImage(imageData);
         stopCamera();
       }
@@ -107,8 +107,31 @@ export default function Snap() {
     if (file && file.type.startsWith("image/")) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setCapturedImage(e.target?.result as string);
-        setIsCamera(false);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Resize image if too large
+          const maxWidth = 800;
+          const maxHeight = 600;
+          let { width, height } = img;
+          
+          if (width > maxWidth || height > maxHeight) {
+            const ratio = Math.min(maxWidth / width, maxHeight / height);
+            width *= ratio;
+            height *= ratio;
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const compressedImage = canvas.toDataURL('image/jpeg', 0.6);
+          setCapturedImage(compressedImage);
+          setIsCamera(false);
+        };
+        img.src = e.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
