@@ -5,13 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import YouTubePlayer from "@/components/media/YouTubePlayer";
+import TEDTalkPlayer from "@/components/media/TEDTalkPlayer";
+import SpotifyPlayer from "@/components/media/SpotifyPlayer";
+import ShortsPlayer from "@/components/media/ShortsPlayer";
 
 export default function Media() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("movies");
+  const [movieSearch, setMovieSearch] = useState("");
+  const [shortsSearch, setShortsSearch] = useState("");
 
   const { data: movies } = useQuery({
-    queryKey: ["/api/media/movies"],
+    queryKey: movieSearch ? ["/api/media/movies/search", movieSearch] : ["/api/media/movies"],
+    queryFn: async ({ queryKey }) => {
+      const [base, q] = queryKey as [string, string | undefined];
+      const url = q ? `${base}?q=${encodeURIComponent(q)}` : base;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to load movies");
+      return res.json();
+    },
   });
 
   const { data: music } = useQuery({
@@ -20,6 +33,17 @@ export default function Media() {
 
   const { data: tedTalks } = useQuery({
     queryKey: ["/api/media/ted-talks"],
+  });
+
+  const { data: shorts } = useQuery({
+    queryKey: ["/api/media/shorts", shortsSearch],
+    queryFn: async ({ queryKey }) => {
+      const [, q] = queryKey as [string, string];
+      const url = q ? `/api/media/shorts?q=${encodeURIComponent(q)}` : `/api/media/shorts`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to load shorts");
+      return res.json();
+    },
   });
 
   const filterItems = (items: any[]) => {
@@ -67,7 +91,7 @@ export default function Media() {
 
       {/* Content Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8">
+        <TabsList className="grid w-full grid-cols-4 mb-8">
           <TabsTrigger value="movies" className="flex items-center" data-testid="tab-movies">
             <i className="fas fa-film mr-2"></i>
             Movies
@@ -80,77 +104,55 @@ export default function Media() {
             <i className="fas fa-video mr-2"></i>
             TED Talks
           </TabsTrigger>
+          <TabsTrigger value="shorts" className="flex items-center" data-testid="tab-shorts">
+            <i className="fas fa-bolt mr-2"></i>
+            Shorts
+          </TabsTrigger>
         </TabsList>
 
-        {/* Movies */}
-        <TabsContent value="movies" className="fade-in">
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
-            {filterItems(movies || []).map((movie) => (
-              <Card key={movie.id} className="group hover:magical-border hover:glow-effect transition-all cursor-pointer" data-testid={`movie-${movie.id}`}>
-                <div className="aspect-[2/3] overflow-hidden rounded-t-lg">
-                  <div className="w-full h-full bg-gradient-to-br from-accent/20 to-primary/20 group-hover:scale-105 transition-transform flex items-center justify-center">
-                    <img 
-                      src={movie.thumbnail} 
-                      alt={`${movie.title} poster`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        target.nextElementSibling?.classList.remove('hidden');
-                      }}
-                    />
-                    <div className="hidden w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/20 to-primary/20">
-                      <i className="fas fa-play text-6xl text-primary/50"></i>
-                    </div>
-                  </div>
-                </div>
-                <CardContent className="p-4">
-                  <h3 className="font-medium text-sm line-clamp-2 mb-2">{movie.title}</h3>
-                  <Badge variant="outline" className="text-xs">
-                    {movie.genre}
-                  </Badge>
-                </CardContent>
-              </Card>
+        {/* TED Talks (first) */}
+        <TabsContent value="tedtalks" className="fade-in">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filterItems(tedTalks || []).map((talk) => (
+              <TEDTalkPlayer
+                key={talk.id}
+                talkId={talk.talkId}
+                title={talk.title}
+                speaker={talk.speaker}
+                duration={talk.duration}
+                thumbnail={talk.thumbnail}
+                description={talk.description}
+                data-testid={`talk-${talk.id}`}
+              />
             ))}
           </div>
-          
-          {filterItems(movies || []).length === 0 && (
+
+          {filterItems(tedTalks || []).length === 0 && (
             <Card className="magical-border">
               <CardContent className="p-8 text-center">
-                <i className="fas fa-film text-4xl text-muted-foreground mb-4"></i>
+                <i className="fas fa-video text-4xl text-muted-foreground mb-4"></i>
                 <p className="text-muted-foreground">
-                  {searchQuery ? "No movies match your search" : "Loading inspiring movies..."}
+                  {searchQuery ? "No TED talks match your search" : "Loading inspiring TED talks..."}
                 </p>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        {/* Music */}
+        {/* Music (second) */}
         <TabsContent value="music" className="fade-in">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filterItems(music || []).map((song) => (
-              <Card key={song.id} className="group hover:magical-border hover:glow-effect transition-all" data-testid={`song-${song.id}`}>
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform">
-                      <i className="fas fa-music text-primary-foreground text-xl"></i>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium line-clamp-1 mb-1">{song.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{song.artist}</p>
-                      <Badge className="text-xs genie-gradient">
-                        {song.mood}
-                      </Badge>
-                    </div>
-                    <Button size="sm" variant="ghost" className="hover:bg-primary hover:text-primary-foreground" asChild>
-                      <a href={song.url} target="_blank" rel="noopener noreferrer">
-                        <i className="fas fa-play"></i>
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <SpotifyPlayer
+                key={song.id}
+                trackId={song.trackId}
+                title={song.title}
+                artist={song.artist}
+                mood={song.mood}
+                albumArt={song.albumArt}
+                previewUrl={song.previewUrl}
+                data-testid={`song-${song.id}`}
+              />
             ))}
           </div>
 
@@ -166,45 +168,68 @@ export default function Media() {
           )}
         </TabsContent>
 
-        {/* TED Talks */}
-        <TabsContent value="tedtalks" className="fade-in">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filterItems(tedTalks || []).map((talk) => (
-              <Card key={talk.id} className="group hover:magical-border hover:glow-effect transition-all" data-testid={`talk-${talk.id}`}>
-                <CardContent className="p-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="w-20 h-20 bg-gradient-to-br from-secondary to-primary rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                      <i className="fas fa-video text-primary-foreground text-xl"></i>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium line-clamp-2 mb-2">{talk.title}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{talk.speaker}</p>
-                      <div className="flex items-center justify-between">
-                        <Badge variant="outline" className="text-xs">
-                          <i className="fas fa-clock mr-1"></i>
-                          {talk.duration}
-                        </Badge>
-                        <Button size="sm" className="genie-gradient hover:opacity-90" asChild>
-                          <a href={talk.url} target="_blank" rel="noopener noreferrer">
-                            <i className="fas fa-external-link-alt mr-2"></i>
-                            Watch
-                          </a>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+        {/* Movies (third) with search */}
+        <TabsContent value="movies" className="fade-in">
+          <div className="flex items-center gap-2 mb-4">
+            <Input
+              placeholder="Search movies on YouTube (e.g., uplifting documentaries)"
+              value={movieSearch}
+              onChange={(e) => setMovieSearch(e.target.value)}
+              className="max-w-xl"
+            />
+            {movieSearch && (
+              <Button variant="outline" onClick={() => setMovieSearch("")}>Clear</Button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+            {filterItems(movies || []).map((movie) => (
+              <YouTubePlayer
+                key={movie.id}
+                videoId={movie.videoId}
+                title={movie.title}
+                thumbnail={movie.thumbnail}
+                genre={movie.genre}
+                description={movie.description}
+                data-testid={`movie-${movie.id}`}
+              />
             ))}
           </div>
-
-          {filterItems(tedTalks || []).length === 0 && (
+          
+          {filterItems(movies || []).length === 0 && (
             <Card className="magical-border">
               <CardContent className="p-8 text-center">
-                <i className="fas fa-video text-4xl text-muted-foreground mb-4"></i>
+                <i className="fas fa-film text-4xl text-muted-foreground mb-4"></i>
                 <p className="text-muted-foreground">
-                  {searchQuery ? "No TED talks match your search" : "Loading inspiring TED talks..."}
+                  {movieSearch ? "No movies match your search" : "Loading inspiring movies..."}
                 </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Shorts (fourth) */}
+        <TabsContent value="shorts" className="fade-in">
+          <div className="flex items-center gap-2 mb-4">
+            <Input
+              placeholder="Search funny shorts"
+              value={shortsSearch}
+              onChange={(e) => setShortsSearch(e.target.value)}
+              className="max-w-xl"
+            />
+            {shortsSearch && (
+              <Button variant="outline" onClick={() => setShortsSearch("")}>Clear</Button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+            {(shorts || []).map((s: any) => (
+              <ShortsPlayer key={s.id} videoId={s.videoId} title={s.title} channel={s.channel} />
+            ))}
+          </div>
+          {(shorts || []).length === 0 && (
+            <Card className="magical-border">
+              <CardContent className="p-8 text-center">
+                <i className="fas fa-bolt text-4xl text-muted-foreground mb-4"></i>
+                <p className="text-muted-foreground">{shortsSearch ? "No shorts match your search" : "Loading shorts..."}</p>
               </CardContent>
             </Card>
           )}

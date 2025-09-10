@@ -19,10 +19,10 @@ export default function MoodTracker() {
   const { toast } = useToast();
 
   const { data: moodEntries } = useQuery({
-    queryKey: ["/api/mood"],
+    queryKey: ["/api/mood?days=7"],
     queryFn: async () => {
-      const response = await fetch("/api/mood?days=7");
-      return response.json();
+      const res = await apiRequest("GET", "/api/mood?days=7");
+      return res.json();
     },
   });
 
@@ -45,7 +45,7 @@ export default function MoodTracker() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }

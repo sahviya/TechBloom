@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
@@ -27,11 +27,8 @@ export default function AICompanion() {
 
   // Load conversation history
   const { data: conversations } = useQuery({
-    queryKey: ["/api/ai/conversations"],
-    queryFn: async () => {
-      const response = await fetch("/api/ai/conversations?limit=20");
-      return response.json();
-    },
+    queryKey: ["/api/ai/conversations?limit=20"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
   useEffect(() => {
@@ -93,7 +90,7 @@ export default function AICompanion() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }

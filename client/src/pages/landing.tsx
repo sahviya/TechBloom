@@ -81,7 +81,7 @@ export default function Landing() {
             asChild
             data-testid="login-button"
           >
-            <a href="/api/login">
+            <a href="/login">
               <i className="fas fa-sparkles mr-2"></i>
               Begin Your Journey
             </a>
@@ -144,7 +144,7 @@ export default function Landing() {
             asChild
             data-testid="cta-login-button"
           >
-            <a href="/api/login">
+            <a href="/login">
               <i className="fas fa-magic mr-2"></i>
               Start Your Free Journey
             </a>

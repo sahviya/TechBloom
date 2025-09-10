@@ -9,6 +9,7 @@ import MoodTracker from "@/components/MoodTracker";
 import MediaSection from "@/components/MediaSection";
 import { Link } from "wouter";
 import { useEffect, useState } from "react";
+import { getQueryFn } from "@/lib/queryClient";
 
 interface Quote {
   quote: string;
@@ -26,11 +27,8 @@ export default function Dashboard() {
   });
 
   const { data: communityPosts } = useQuery({
-    queryKey: ["/api/community/posts"],
-    queryFn: async () => {
-      const response = await fetch("/api/community/posts?limit=3");
-      return response.json();
-    },
+    queryKey: ["/api/community/posts?limit=3"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
   useEffect(() => {

@@ -4,6 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
+import YouTubePlayer from "@/components/media/YouTubePlayer";
+import TEDTalkPlayer from "@/components/media/TEDTalkPlayer";
+import SpotifyPlayer from "@/components/media/SpotifyPlayer";
 
 interface MediaSectionProps {
   preview?: boolean;
@@ -67,24 +70,16 @@ export default function MediaSection({ preview = false }: MediaSectionProps) {
           <TabsContent value="movies" className="mt-6">
             <div className={`grid ${preview ? 'grid-cols-2 md:grid-cols-3' : 'grid-cols-2 md:grid-cols-4 lg:grid-cols-5'} gap-4`}>
               {displayItems(movies || [], preview ? 3 : undefined)?.map((movie) => (
-                <div key={movie.id} className="group cursor-pointer" data-testid={`movie-${movie.id}`}>
-                  <div className="aspect-[2/3] bg-gradient-to-br from-accent/20 to-primary/20 rounded-lg mb-2 group-hover:scale-105 transition-transform overflow-hidden">
-                    <img 
-                      src={movie.thumbnail} 
-                      alt={`${movie.title} poster`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-accent/20 to-primary/20">
-                      <i className="fas fa-play text-4xl text-primary/50"></i>
-                    </div>
-                  </div>
-                  <h4 className="font-medium text-sm line-clamp-2">{movie.title}</h4>
-                  <p className="text-xs text-muted-foreground">{movie.genre}</p>
-                </div>
+                <YouTubePlayer
+                  key={movie.id}
+                  videoId={movie.videoId}
+                  title={movie.title}
+                  thumbnail={movie.thumbnail}
+                  genre={movie.genre}
+                  description={movie.description}
+                  className="h-full"
+                  data-testid={`movie-${movie.id}`}
+                />
               ))}
             </div>
           </TabsContent>
@@ -92,19 +87,16 @@ export default function MediaSection({ preview = false }: MediaSectionProps) {
           <TabsContent value="music" className="mt-6">
             <div className="space-y-3">
               {displayItems(music || [], preview ? 3 : undefined)?.map((song) => (
-                <div key={song.id} className="flex items-center space-x-3 p-3 bg-card/50 rounded-lg hover:bg-accent/10 transition-colors cursor-pointer" data-testid={`song-${song.id}`}>
-                  <div className="w-12 h-12 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-                    <i className="fas fa-music text-primary-foreground"></i>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{song.title}</h4>
-                    <p className="text-sm text-muted-foreground">{song.artist}</p>
-                    <p className="text-xs text-primary">{song.mood}</p>
-                  </div>
-                  <Button size="sm" variant="ghost">
-                    <i className="fas fa-play"></i>
-                  </Button>
-                </div>
+                <SpotifyPlayer
+                  key={song.id}
+                  trackId={song.trackId}
+                  title={song.title}
+                  artist={song.artist}
+                  mood={song.mood}
+                  albumArt={song.albumArt}
+                  previewUrl={song.previewUrl}
+                  data-testid={`song-${song.id}`}
+                />
               ))}
             </div>
           </TabsContent>
@@ -112,21 +104,16 @@ export default function MediaSection({ preview = false }: MediaSectionProps) {
           <TabsContent value="tedtalks" className="mt-6">
             <div className="space-y-3">
               {displayItems(tedTalks || [], preview ? 3 : undefined)?.map((talk) => (
-                <div key={talk.id} className="flex items-center space-x-3 p-3 bg-card/50 rounded-lg hover:bg-accent/10 transition-colors cursor-pointer" data-testid={`tedtalk-${talk.id}`}>
-                  <div className="w-12 h-12 bg-gradient-to-br from-secondary to-primary rounded-lg flex items-center justify-center">
-                    <i className="fas fa-video text-primary-foreground"></i>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-sm line-clamp-2">{talk.title}</h4>
-                    <p className="text-sm text-muted-foreground">{talk.speaker}</p>
-                    <p className="text-xs text-accent">{talk.duration}</p>
-                  </div>
-                  <Button size="sm" variant="ghost" asChild>
-                    <a href={talk.url} target="_blank" rel="noopener noreferrer">
-                      <i className="fas fa-external-link-alt"></i>
-                    </a>
-                  </Button>
-                </div>
+                <TEDTalkPlayer
+                  key={talk.id}
+                  talkId={talk.talkId}
+                  title={talk.title}
+                  speaker={talk.speaker}
+                  duration={talk.duration}
+                  thumbnail={talk.thumbnail}
+                  description={talk.description}
+                  data-testid={`tedtalk-${talk.id}`}
+                />
               ))}
             </div>
           </TabsContent>

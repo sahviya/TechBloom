@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, getQueryFn } from "@/lib/queryClient";
 import { isUnauthorizedError } from "@/lib/authUtils";
 
 export default function Community() {
@@ -25,34 +25,25 @@ export default function Community() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Redirect if not authenticated
+  // Allow viewing the community feed without forcing login
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, isLoading, toast]);
+    // no redirect here; interactions will prompt auth in toasts
+  }, [isAuthenticated, isLoading]);
 
   const { data: posts, isLoading: postsLoading } = useQuery({
-    queryKey: ["/api/community/posts"],
+    queryKey: ["/api/community/posts?limit=50"],
+    // public endpoint; don't require auth to view
     queryFn: async () => {
-      const response = await fetch("/api/community/posts?limit=50");
-      return response.json();
+      const res = await fetch("/api/community/posts?limit=50");
+      return res.json();
     },
-    enabled: isAuthenticated,
+    enabled: true,
   });
 
   const { data: comments } = useQuery({
     queryKey: ["/api/community/posts", selectedPost?.id, "comments"],
     queryFn: async () => {
-      const response = await fetch(`/api/community/posts/${selectedPost.id}/comments`);
+      const response = await apiRequest("GET", `/api/community/posts/${selectedPost.id}/comments`);
       return response.json();
     },
     enabled: !!selectedPost,
@@ -78,7 +69,7 @@ export default function Community() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -109,7 +100,7 @@ export default function Community() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -143,7 +134,7 @@ export default function Community() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }

@@ -96,6 +96,42 @@ export const aiConversations = pgTable("ai_conversations", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Book reading data
+export const bookReadings = pgTable("book_readings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bookId: varchar("book_id").notNull(),
+  currentPage: integer("current_page").default(1),
+  totalPages: integer("total_pages"),
+  readingTheme: varchar("reading_theme").default("light"), // light, dark, sepia
+  fontSize: integer("font_size").default(16),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Book bookmarks
+export const bookBookmarks = pgTable("book_bookmarks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bookId: varchar("book_id").notNull(),
+  pageNumber: integer("page_number").notNull(),
+  title: varchar("title"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Book highlights
+export const bookHighlights = pgTable("book_highlights", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  bookId: varchar("book_id").notNull(),
+  pageNumber: integer("page_number").notNull(),
+  text: text("text").notNull(),
+  color: varchar("color").default("yellow"), // yellow, green, blue, pink
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   journalEntries: many(journalEntries),
@@ -104,6 +140,9 @@ export const usersRelations = relations(users, ({ many }) => ({
   postComments: many(postComments),
   moodEntries: many(moodEntries),
   aiConversations: many(aiConversations),
+  bookReadings: many(bookReadings),
+  bookBookmarks: many(bookBookmarks),
+  bookHighlights: many(bookHighlights),
 }));
 
 export const journalEntriesRelations = relations(journalEntries, ({ one }) => ({
@@ -194,6 +233,22 @@ export const insertAiConversationSchema = createInsertSchema(aiConversations).om
   createdAt: true,
 });
 
+export const insertBookReadingSchema = createInsertSchema(bookReadings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertBookBookmarkSchema = createInsertSchema(bookBookmarks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBookHighlightSchema = createInsertSchema(bookHighlights).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -207,3 +262,9 @@ export type InsertMoodEntry = typeof insertMoodEntrySchema._type;
 export type MoodEntry = typeof moodEntries.$inferSelect;
 export type InsertAiConversation = typeof insertAiConversationSchema._type;
 export type AiConversation = typeof aiConversations.$inferSelect;
+export type InsertBookReading = typeof insertBookReadingSchema._type;
+export type BookReading = typeof bookReadings.$inferSelect;
+export type InsertBookBookmark = typeof insertBookBookmarkSchema._type;
+export type BookBookmark = typeof bookBookmarks.$inferSelect;
+export type InsertBookHighlight = typeof insertBookHighlightSchema._type;
+export type BookHighlight = typeof bookHighlights.$inferSelect;

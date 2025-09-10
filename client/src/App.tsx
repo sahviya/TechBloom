@@ -1,23 +1,25 @@
 import { Switch, Route } from "wouter";
-import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/useAuth";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import Landing from "@/pages/landing";
-import Dashboard from "@/pages/dashboard";
-import Journal from "@/pages/journal";
-import Community from "@/pages/community";
-import Snap from "@/pages/snap";
-import Genie from "@/pages/genie";
-import Profile from "@/pages/profile";
-import Media from "@/pages/media";
-import Games from "@/pages/games";
-import Books from "@/pages/books";
-import Shopping from "@/pages/shopping";
-import NotFound from "@/pages/not-found";
-import Navigation from "@/components/Navigation";
+import { queryClient } from "./lib/queryClient";
+import { ThemeProvider } from "./components/ThemeProvider";
+import Navigation from "./components/Navigation";
+import Footer from "./components/Footer";
+import { useAuth } from "./hooks/useAuth";
+
+// Import your page components
+import Landing from "./pages/landing";
+import Login from "./pages/login";
+import NotFound from "./pages/not-found";
+import Dashboard from "./pages/dashboard";
+import Journal from "./pages/journal";
+import Community from "./pages/community";
+import Snap from "./pages/snap";
+import Genie from "./pages/genie";
+import Profile from "./pages/profile";
+import Media from "./pages/media";
+import Games from "./pages/games";
+import Books from "./pages/books";
+import Shopping from "./pages/shopping";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -33,31 +35,40 @@ function Router() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {!isAuthenticated ? (
-        <Switch>
-          <Route path="/" component={Landing} />
-          <Route component={NotFound} />
-        </Switch>
-      ) : (
-        <div className="flex min-h-screen">
-          <Navigation />
-          <main className="flex-1">
+        <>
+          <div className="flex-1">
             <Switch>
-              <Route path="/" component={Dashboard} />
-              <Route path="/journal" component={Journal} />
-              <Route path="/community" component={Community} />
-              <Route path="/snap" component={Snap} />
-              <Route path="/genie" component={Genie} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/media" component={Media} />
-              <Route path="/games" component={Games} />
-              <Route path="/books" component={Books} />
-              <Route path="/shopping" component={Shopping} />
+              <Route path="/" component={Landing} />
+              <Route path="/login" component={Login} />
               <Route component={NotFound} />
             </Switch>
-          </main>
-        </div>
+          </div>
+          <Footer />
+        </>
+      ) : (
+        <>
+          <div className="flex flex-1 min-h-0">
+            <Navigation />
+            <main className="flex-1 pb-16 md:pb-0">
+              <Switch>
+                <Route path="/" component={Dashboard} />
+                <Route path="/journal" component={Journal} />
+                <Route path="/community" component={Community} />
+                <Route path="/snap" component={Snap} />
+                <Route path="/genie" component={Genie} />
+                <Route path="/profile" component={Profile} />
+                <Route path="/media" component={Media} />
+                <Route path="/games" component={Games} />
+                <Route path="/books" component={Books} />
+                <Route path="/shopping" component={Shopping} />
+                <Route component={NotFound} />
+              </Switch>
+            </main>
+          </div>
+          <Footer />
+        </>
       )}
     </div>
   );
@@ -67,10 +78,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <Router />
       </ThemeProvider>
     </QueryClientProvider>
   );

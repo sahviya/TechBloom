@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import InlinePDFViewer from "@/components/books/InlinePDFViewer";
 
 export default function Books() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBook, setSelectedBook] = useState<any>(null);
 
   const { data: books } = useQuery({
     queryKey: ["/api/books"],
@@ -20,39 +22,38 @@ export default function Books() {
 
   const bookCategories = [
     {
-      name: "Mindfulness & Meditation",
+      name: "Classic Literature",
       books: filteredBooks.filter((book: any) => 
-        book.title.toLowerCase().includes('mindfulness') || 
-        book.title.toLowerCase().includes('now') ||
-        book.author.toLowerCase().includes('kabat-zinn') ||
-        book.author.toLowerCase().includes('tolle')
+        book.title.toLowerCase().includes('brave new world') ||
+        book.title.toLowerCase().includes('lady susan') ||
+        book.title.toLowerCase().includes('little women') ||
+        book.title.toLowerCase().includes('poor folk') ||
+        book.title.toLowerCase().includes('adventures of tom sawyer') ||
+        book.title.toLowerCase().includes('metamorphosis') ||
+        book.title.toLowerCase().includes('three musketeers') ||
+        book.title.toLowerCase().includes('time machine')
       ),
-      color: "bg-green-500/20 text-green-600 dark:text-green-400",
-      icon: "fas fa-leaf"
+      color: "bg-amber-500/20 text-amber-600 dark:text-amber-400",
+      icon: "fas fa-scroll"
     },
     {
-      name: "Personal Growth",
+      name: "Self-Help & Personal Development",
       books: filteredBooks.filter((book: any) => 
-        book.title.toLowerCase().includes('happiness') || 
-        book.title.toLowerCase().includes('emotional') ||
-        book.title.toLowerCase().includes('gifts')
-      ),
-      color: "bg-blue-500/20 text-blue-600 dark:text-blue-400", 
-      icon: "fas fa-arrow-up"
-    },
-    {
-      name: "Self-Help & Motivation",
-      books: filteredBooks.filter((book: any) => 
-        !book.title.toLowerCase().includes('mindfulness') &&
-        !book.title.toLowerCase().includes('now') &&
-        !book.title.toLowerCase().includes('happiness') &&
-        !book.title.toLowerCase().includes('emotional') &&
-        !book.title.toLowerCase().includes('gifts') &&
-        !book.author.toLowerCase().includes('kabat-zinn') &&
-        !book.author.toLowerCase().includes('tolle')
+        book.title.toLowerCase().includes('self-help') ||
+        book.title.toLowerCase().includes('art of worldly wisdom') ||
+        book.title.toLowerCase().includes('law of success') ||
+        book.title.toLowerCase().includes('master key system') ||
+        book.title.toLowerCase().includes('power of concentration') ||
+        book.title.toLowerCase().includes('science of getting rich')
       ),
       color: "bg-purple-500/20 text-purple-600 dark:text-purple-400",
       icon: "fas fa-lightbulb"
+    },
+    {
+      name: "All Books",
+      books: filteredBooks,
+      color: "bg-blue-500/20 text-blue-600 dark:text-blue-400", 
+      icon: "fas fa-book"
     },
   ];
 
@@ -90,51 +91,56 @@ export default function Books() {
       </Card>
 
       {/* Featured Book */}
-      <Card className="magical-border glow-effect mb-8 fade-in">
-        <CardHeader>
-          <CardTitle className="text-center text-xl font-serif text-primary flex items-center justify-center">
-            <i className="fas fa-star mr-2"></i>
-            ✨ Book of the Day ✨
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-6 max-w-3xl mx-auto">
-            <div className="w-32 h-40 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <div className="text-center">
-                <i className="fas fa-book-open text-4xl text-primary mb-2"></i>
-                <div className="text-xs text-muted-foreground">Book Cover</div>
+      {books && books.length > 0 && (
+        <Card className="magical-border glow-effect mb-8 fade-in">
+          <CardHeader>
+            <CardTitle className="text-center text-xl font-serif text-primary flex items-center justify-center">
+              <i className="fas fa-star mr-2"></i>
+              ✨ Book of the Day ✨
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-6 max-w-3xl mx-auto">
+              <div className="w-32 h-40 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="text-center p-4">
+                  <i className="fas fa-book text-3xl text-blue-600 dark:text-blue-400 mb-2"></i>
+                  <div className="text-xs text-blue-600 dark:text-blue-300 font-medium">
+                    {books[0].title}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-2xl font-serif font-semibold mb-2">The Power of Now</h3>
-              <p className="text-lg text-secondary mb-2">by Eckhart Tolle</p>
-              <p className="text-muted-foreground mb-4">
-                A guide to spiritual enlightenment that teaches the importance of living in the present moment. 
-                This transformative book offers practical teachings to help you find peace and happiness by focusing on the now.
-              </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge className="bg-green-500/20 text-green-600 dark:text-green-400">Mindfulness</Badge>
-                <Badge className="bg-blue-500/20 text-blue-600 dark:text-blue-400">Spirituality</Badge>
-                <Badge className="bg-yellow-500/20 text-yellow-600 dark:text-yellow-400">Present Moment</Badge>
-              </div>
-              <div className="flex space-x-3">
-                <Button className="genie-gradient hover:opacity-90" asChild data-testid="read-featured">
-                  <a href="https://archive.org/details/powerofnow00tol" target="_blank" rel="noopener noreferrer">
+              <div className="flex-1">
+                <h3 className="text-2xl font-serif font-semibold mb-2">{books[0].title}</h3>
+                <p className="text-lg text-secondary mb-2">by {books[0].author}</p>
+                <p className="text-muted-foreground mb-4">
+                  {books[0].description}
+                </p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Badge className="bg-blue-500/20 text-blue-600 dark:text-blue-400">Featured</Badge>
+                  <Badge className="bg-purple-500/20 text-purple-600 dark:text-purple-400">Free</Badge>
+                  <Badge className="bg-green-500/20 text-green-600 dark:text-green-400">PDF</Badge>
+                </div>
+                <div className="flex space-x-3">
+                  <Button 
+                    className="genie-gradient hover:opacity-90" 
+                    onClick={() => setSelectedBook(books[0])}
+                    data-testid="read-featured"
+                  >
                     <i className="fas fa-book-reader mr-2"></i>
-                    Read Online
-                  </a>
-                </Button>
-                <Button variant="outline" asChild>
-                  <a href="https://archive.org/details/powerofnow00tol" target="_blank" rel="noopener noreferrer">
-                    <i className="fas fa-download mr-2"></i>
-                    Download
-                  </a>
-                </Button>
+                    Read Now
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <a href={books[0].pdfUrl} download>
+                      <i className="fas fa-download mr-2"></i>
+                      Download PDF
+                    </a>
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Book Categories */}
       <div className="space-y-8">
@@ -153,46 +159,57 @@ export default function Books() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {category.books.map((book: any) => (
                   <Card key={book.id} className="hover:magical-border hover:glow-effect transition-all group" data-testid={`book-${book.id}`}>
-                    <CardContent className="p-6">
-                      <div className="flex space-x-4">
-                        <div className="w-20 h-28 bg-gradient-to-br from-primary/20 to-accent/20 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                          <div className="text-center">
-                            <i className="fas fa-book text-2xl text-primary mb-1"></i>
-                            <div className="text-xs text-muted-foreground">Book</div>
-                          </div>
+                    <CardContent className="p-4">
+                      {/* Book Cover */}
+                      <div className="aspect-[3/4] bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg mb-4 flex items-center justify-center group-hover:scale-105 transition-transform relative overflow-hidden">
+                        <div className="text-center p-4">
+                          <i className="fas fa-book text-4xl text-blue-600 dark:text-blue-400 mb-2"></i>
+                          <h4 className="font-semibold text-sm text-blue-800 dark:text-blue-200 line-clamp-2 mb-1">
+                            {book.title}
+                          </h4>
+                          <p className="text-xs text-blue-600 dark:text-blue-300">
+                            by {book.author}
+                          </p>
                         </div>
-                        <div className="flex-1 min-w-0">
+                        {/* Decorative elements */}
+                        <div className="absolute top-2 right-2 w-8 h-8 bg-white/20 rounded-full"></div>
+                        <div className="absolute bottom-2 left-2 w-6 h-6 bg-white/20 rounded-full"></div>
+                      </div>
+                      
+                      {/* Book Info */}
+                      <div className="space-y-3">
+                        <div>
                           <h3 className="font-medium text-lg mb-1 line-clamp-2">{book.title}</h3>
                           <p className="text-sm text-secondary mb-2">by {book.author}</p>
-                          <p className="text-sm text-muted-foreground mb-4 line-clamp-3">{book.description}</p>
-                          <div className="flex flex-col space-y-2">
-                            <Button 
-                              size="sm" 
-                              className="genie-gradient hover:opacity-90 w-full" 
-                              asChild
-                              data-testid={`read-${book.id}`}
-                            >
-                              <a href={book.url} target="_blank" rel="noopener noreferrer">
-                                <i className="fas fa-book-reader mr-2"></i>
-                                Read Online
-                              </a>
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              className="w-full" 
-                              asChild
-                              data-testid={`download-${book.id}`}
-                            >
-                              <a href={book.url} target="_blank" rel="noopener noreferrer">
-                                <i className="fas fa-download mr-2"></i>
-                                Download
-                              </a>
-                            </Button>
-                          </div>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{book.description}</p>
+                        </div>
+                        
+                        {/* Action Buttons */}
+                        <div className="flex flex-col space-y-2">
+                          <Button 
+                            size="sm" 
+                            className="genie-gradient hover:opacity-90 w-full" 
+                            onClick={() => setSelectedBook(book)}
+                            data-testid={`read-${book.id}`}
+                          >
+                            <i className="fas fa-book-reader mr-2"></i>
+                            Read Now
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            className="w-full" 
+                            asChild
+                            data-testid={`download-${book.id}`}
+                          >
+                            <a href={book.pdfUrl} download>
+                              <i className="fas fa-download mr-2"></i>
+                              Download PDF
+                            </a>
+                          </Button>
                         </div>
                       </div>
                     </CardContent>
@@ -277,6 +294,15 @@ export default function Books() {
           </div>
         </CardContent>
       </Card>
+
+      {/* PDF Viewer */}
+      {selectedBook && (
+        <InlinePDFViewer
+          title={selectedBook.title}
+          pdfUrl={selectedBook.pdfUrl}
+          onClose={() => setSelectedBook(null)}
+        />
+      )}
     </div>
   );
 }

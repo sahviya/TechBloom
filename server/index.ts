@@ -1,3 +1,9 @@
+import dotenv from "dotenv";
+import 'dotenv/config';
+import path from "path";
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+console.log("Loaded DATABASE_URL =", process.env.DATABASE_URL);
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -61,11 +67,24 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  // Bind to localhost; if port is in use during development, retry next ports
+  const tryListen = (p: number, attemptsLeft: number) => {
+    const onError = (err: any) => {
+      if (app.get("env") === "development" && err?.code === "EADDRINUSE" && attemptsLeft > 0) {
+        const nextPort = p + 1;
+        log(`port ${p} in use, retrying on ${nextPort}`);
+        setTimeout(() => tryListen(nextPort, attemptsLeft - 1), 150);
+      } else {
+        throw err;
+      }
+    };
+
+    server.once("error", onError);
+    server.listen(p, "127.0.0.1", () => {
+      server.off("error", onError);
+      log(`serving on port ${p}`);
+    });
+  };
+
+  tryListen(port, 10);
 })();

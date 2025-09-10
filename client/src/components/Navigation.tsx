@@ -1,5 +1,7 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import mindbloomLogo from "@/assets/mindbloom-logo.png";
+
 import { useTheme } from "@/components/ThemeProvider";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,18 +24,24 @@ import { cn } from "@/lib/utils";
 
 const languages = [
   { code: "en", name: "English" },
-  { code: "es", name: "Español" },
-  { code: "fr", name: "Français" },
-  { code: "ar", name: "العربية" },
-  { code: "zh", name: "中文" },
   { code: "hi", name: "हिंदी" },
+  { code: "bn", name: "বাংলা" },
+  { code: "mr", name: "मराठी" },
+  { code: "te", name: "తెలుగు" },
+  { code: "ta", name: "தமிழ்" },
+  { code: "gu", name: "ગુજરાતી" },
+  { code: "kn", name: "ಕನ್ನಡ" },
+  { code: "ml", name: "മലയാളം" },
+  { code: "pa", name: "ਪੰਜਾਬੀ" },
+  { code: "or", name: "ଓଡ଼ିଆ" },
+  { code: "ur", name: "اردو" },
 ];
 
 export default function Navigation() {
   const [location] = useLocation();
-  const { user } = useAuth();
+  const { user } = useAuth() as any;
   const { theme, setTheme } = useTheme();
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState("hi");
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const navItems = [
@@ -51,10 +59,12 @@ export default function Navigation() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className={cn(
-        "hidden md:flex flex-col bg-card border-r border-border transition-all duration-300",
-        isCollapsed ? "w-16" : "w-64"
-      )}>
+      <aside
+        className={cn(
+          "hidden md:flex flex-col bg-card border-r border-border transition-all duration-300",
+          isCollapsed ? "w-16" : "w-64"
+        )}
+      >
         {/* Header */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center justify-between">
@@ -63,7 +73,9 @@ export default function Navigation() {
                 <i className="fas fa-magic text-primary-foreground text-lg"></i>
               </div>
               {!isCollapsed && (
-                <h1 className="text-xl font-serif font-bold text-primary">MindBloom</h1>
+                <h1 className="text-xl font-serif font-bold text-primary">
+                  MindBloom
+                </h1>
               )}
             </Link>
             <Button
@@ -73,57 +85,78 @@ export default function Navigation() {
               className="p-2"
               data-testid="sidebar-toggle"
             >
-              <i className={`fas fa-${isCollapsed ? 'angle-right' : 'angle-left'}`}></i>
+              <i
+                className={`fas fa-${
+                  isCollapsed ? "angle-right" : "angle-left"
+                }`}
+              ></i>
             </Button>
           </div>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
-          {navItems.map((item) => (
-            <Link key={item.path} href={item.path}>
-              <Button
-                variant={location === item.path ? "default" : "ghost"}
-                className={cn(
-                  "w-full justify-start",
-                  location === item.path && "genie-gradient",
-                  isCollapsed && "px-2"
-                )}
-                data-testid={`nav-${item.label.toLowerCase()}`}
-              >
-                <i className={`${item.icon} ${isCollapsed ? '' : 'mr-3'} w-4`}></i>
-                {!isCollapsed && item.label}
-              </Button>
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const isActive = location === item.path;
+            return (
+              <Link key={item.path} href={item.path}>
+                <Button
+                  variant="ghost"
+                  className={cn(
+                    "w-full justify-start rounded-2xl px-3 py-3 text-sm transition-all",
+                    "border border-transparent",
+                    !isActive && "text-muted-foreground hover:bg-accent/10 hover:text-primary",
+                    isActive && "genie-gradient text-primary-foreground shadow-md",
+                    isCollapsed && "px-2 py-2"
+                  )}
+                  data-testid={`nav-${item.label.toLowerCase()}`}
+                >
+                  {isActive ? (
+                    <span className={cn(
+                      "mr-3 inline-flex items-center justify-center",
+                      "w-6 h-6 rounded-md bg-white/20 text-white"
+                    )}>
+                      <i className={`${item.icon}`}></i>
+                    </span>
+                  ) : (
+                    <i
+                      className={cn(
+                        `${item.icon} w-4 h-4`,
+                        !isCollapsed && "mr-3"
+                      )}
+                    ></i>
+                  )}
+                  {!isCollapsed && (
+                    <span className={cn("tracking-wide", isActive ? "font-semibold" : "font-medium")}>{item.label}</span>
+                  )}
+                </Button>
+              </Link>
+            );
+          })}
         </nav>
 
         {/* User Section */}
         <div className="p-4 border-t border-border space-y-4">
-          {/* User Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className={cn(
-                  "w-full justify-start p-2",
-                  isCollapsed && "justify-center"
-                )}
+              <Button
+                variant="ghost"
+                className={cn("w-full justify-start p-2", isCollapsed && "justify-center")}
                 data-testid="profile-menu"
               >
                 <Avatar className="w-8 h-8 shrink-0">
-                  <AvatarImage src={(user as any)?.profileImageUrl || undefined} />
+                  <AvatarImage src={user?.profileImageUrl || undefined} />
                   <AvatarFallback className="genie-gradient text-primary-foreground">
-                    {(user as any)?.firstName?.[0] || (user as any)?.email?.[0] || "U"}
+                    {user?.firstName?.[0] || user?.email?.[0] || "U"}
                   </AvatarFallback>
                 </Avatar>
                 {!isCollapsed && (
                   <div className="ml-3 text-left overflow-hidden">
                     <p className="text-sm font-medium truncate">
-                      {(user as any)?.firstName || (user as any)?.email?.split("@")[0] || "User"}
+                      {user?.firstName || user?.email?.split("@")[0] || "User"}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
-                      {(user as any)?.email || ""}
+                      {user?.email || ""}
                     </p>
                   </div>
                 )}
@@ -137,19 +170,20 @@ export default function Navigation() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <a href="/api/logout">
-                  <i className="fas fa-sign-out-alt mr-2"></i>
-                  Logout
-                </a>
+              <DropdownMenuItem
+                onClick={() => {
+                  localStorage.removeItem("auth_token");
+                  window.location.href = "/login";
+                }}
+              >
+                <i className="fas fa-sign-out-alt mr-2"></i>
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Controls */}
           {!isCollapsed && (
             <div className="space-y-3">
-              {/* Language Selector */}
               <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger className="w-full" data-testid="language-selector">
                   <SelectValue />
@@ -163,7 +197,6 @@ export default function Navigation() {
                 </SelectContent>
               </Select>
 
-              {/* Theme Selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" className="w-full justify-start" data-testid="theme-selector">
@@ -199,9 +232,10 @@ export default function Navigation() {
               <Button
                 variant="ghost"
                 size="sm"
-                className={`flex flex-col items-center py-2 px-3 ${
-                  location === item.path ? "text-primary" : "text-muted-foreground"
-                }`}
+                className={cn(
+                  "flex flex-col items-center py-2 px-3",
+                  location === item.path ? "text-primary" : "text-muted-foreground",
+                )}
                 data-testid={`mobile-nav-${item.label.toLowerCase()}`}
               >
                 <i className={`${item.icon} mb-1`}></i>

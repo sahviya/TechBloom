@@ -1,26 +1,7 @@
-import {
-  users,
-  journalEntries,
-  communityPosts,
-  postLikes,
-  postComments,
-  moodEntries,
-  aiConversations,
-  type User,
-  type UpsertUser,
-  type InsertJournalEntry,
-  type JournalEntry,
-  type InsertCommunityPost,
-  type CommunityPost,
-  type InsertPostComment,
-  type PostComment,
-  type InsertMoodEntry,
-  type MoodEntry,
-  type InsertAiConversation,
-  type AiConversation,
-} from "@shared/schema";
-import { db } from "./db";
-import { eq, desc, and, count, sql } from "drizzle-orm";
+import { PrismaClient, type User as PrismaUser, type JournalEntry as PrismaJournalEntry, type CommunityPost as PrismaCommunityPost, type PostComment as PrismaPostComment, type MoodEntry as PrismaMoodEntry, type AiConversation as PrismaAiConversation } from "@prisma/client";
+import { type InsertJournalEntry, type InsertCommunityPost, type InsertPostComment, type InsertMoodEntry, type InsertAiConversation, type User as SharedUser, type JournalEntry as SharedJournalEntry, type CommunityPost as SharedCommunityPost, type PostComment as SharedPostComment, type MoodEntry as SharedMoodEntry, type AiConversation as SharedAiConversation, type UpsertUser } from "@shared/schema";
+
+const prisma = new PrismaClient();
 
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
@@ -54,176 +35,127 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   // User operations
-  async getUser(id: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+  async getUser(id: string): Promise<SharedUser | undefined> {
+    const user = await prisma.user.findUnique({ where: { id } });
+    return user as unknown as SharedUser | undefined;
   }
 
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
-      .returning();
-    return user;
+  async upsertUser(userData: UpsertUser): Promise<SharedUser> {
+    if (!userData.id) {
+      // if id missing, upsert by unique email when available
+      if ((userData as any).email) {
+        const existing = await prisma.user.findUnique({ where: { email: (userData as any).email } });
+        if (existing) {
+          const updated = await prisma.user.update({ where: { id: existing.id }, data: { ...(userData as any), updatedAt: new Date() } });
+          return updated as unknown as SharedUser;
+        }
+        const created = await prisma.user.create({ data: userData as any });
+        return created as unknown as SharedUser;
+      }
+      // no id and no email: read current user is required for update; fallback to error
+      throw new Error("Unable to upsert user: missing id and email");
+    }
+
+    const user = await prisma.user.upsert({
+      where: { id: userData.id },
+      update: { ...(userData as any), updatedAt: new Date() },
+      create: { ...(userData as any) },
+    });
+    return user as unknown as SharedUser;
   }
 
   // Journal operations
-  async createJournalEntry(entry: InsertJournalEntry): Promise<JournalEntry> {
-    const [journalEntry] = await db
-      .insert(journalEntries)
-      .values(entry)
-      .returning();
-    return journalEntry;
+  async createJournalEntry(entry: InsertJournalEntry): Promise<SharedJournalEntry> {
+    const journalEntry = await prisma.journalEntry.create({ data: entry as any });
+    return journalEntry as unknown as SharedJournalEntry;
   }
 
-  async getJournalEntries(userId: string): Promise<JournalEntry[]> {
-    return await db
-      .select()
-      .from(journalEntries)
-      .where(eq(journalEntries.userId, userId))
-      .orderBy(desc(journalEntries.createdAt));
+  async getJournalEntries(userId: string): Promise<SharedJournalEntry[]> {
+    return await prisma.journalEntry.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }) as unknown as SharedJournalEntry[];
   }
 
-  async updateJournalEntry(id: string, userId: string, updates: Partial<InsertJournalEntry>): Promise<JournalEntry | undefined> {
-    const [updated] = await db
-      .update(journalEntries)
-      .set({ ...updates, updatedAt: new Date() })
-      .where(and(eq(journalEntries.id, id), eq(journalEntries.userId, userId)))
-      .returning();
-    return updated;
+  async updateJournalEntry(id: string, userId: string, updates: Partial<InsertJournalEntry>): Promise<SharedJournalEntry | undefined> {
+    const updated = await prisma.journalEntry.updateMany({
+      where: { id, userId },
+      data: { ...(updates as any), updatedAt: new Date() },
+    });
+    if (updated.count === 0) return undefined;
+    return await prisma.journalEntry.findUnique({ where: { id } }) as unknown as SharedJournalEntry | undefined;
   }
 
   async deleteJournalEntry(id: string, userId: string): Promise<boolean> {
-    const result = await db
-      .delete(journalEntries)
-      .where(and(eq(journalEntries.id, id), eq(journalEntries.userId, userId)));
-    return (result.rowCount ?? 0) > 0;
+    const result = await prisma.journalEntry.deleteMany({ where: { id, userId } });
+    return result.count > 0;
   }
 
   // Community operations
-  async createCommunityPost(post: InsertCommunityPost): Promise<CommunityPost> {
-    const [communityPost] = await db
-      .insert(communityPosts)
-      .values(post)
-      .returning();
-    return communityPost;
+  async createCommunityPost(post: InsertCommunityPost): Promise<SharedCommunityPost> {
+    const communityPost = await prisma.communityPost.create({ data: post as any });
+    return communityPost as unknown as SharedCommunityPost;
   }
 
-  async getCommunityPosts(limit = 20, offset = 0): Promise<Array<CommunityPost & { user: User; likesCount: number; commentsCount: number; userLiked: boolean }>> {
-    const posts = await db
-      .select({
-        post: communityPosts,
-        user: users,
-        likesCount: count(postLikes.id).as('likesCount'),
-        commentsCount: count(postComments.id).as('commentsCount'),
-      })
-      .from(communityPosts)
-      .leftJoin(users, eq(communityPosts.userId, users.id))
-      .leftJoin(postLikes, eq(communityPosts.id, postLikes.postId))
-      .leftJoin(postComments, eq(communityPosts.id, postComments.postId))
-      .groupBy(communityPosts.id, users.id)
-      .orderBy(desc(communityPosts.createdAt))
-      .limit(limit)
-      .offset(offset);
-
-    return posts.map(({ post, user, likesCount, commentsCount }) => ({
-      ...post,
-      user: user!,
-      likesCount: Number(likesCount),
-      commentsCount: Number(commentsCount),
-      userLiked: false, // This would need to be calculated based on current user
+  async getCommunityPosts(limit = 20, offset = 0): Promise<Array<SharedCommunityPost & { user: SharedUser; likesCount: number; commentsCount: number; userLiked: boolean }>> {
+    const posts = await prisma.communityPost.findMany({
+      include: { user: true, likesRel: true, comments: true },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
+    });
+    return posts.map((p) => ({
+      ...(p as any),
+      user: p.user as any,
+      likesCount: p.likesRel.length,
+      commentsCount: p.comments.length,
+      userLiked: false,
     }));
   }
 
   async likeCommunityPost(userId: string, postId: string): Promise<boolean> {
     try {
-      await db.insert(postLikes).values({ userId, postId });
+      await prisma.postLike.create({ data: { userId, postId } });
       return true;
     } catch {
-      return false; // Already liked or post doesn't exist
+      return false;
     }
   }
 
   async unlikeCommunityPost(userId: string, postId: string): Promise<boolean> {
-    const result = await db
-      .delete(postLikes)
-      .where(and(eq(postLikes.userId, userId), eq(postLikes.postId, postId)));
-    return (result.rowCount ?? 0) > 0;
+    const result = await prisma.postLike.deleteMany({ where: { userId, postId } });
+    return result.count > 0;
   }
 
   // Comments operations
-  async createPostComment(comment: InsertPostComment): Promise<PostComment> {
-    const [postComment] = await db
-      .insert(postComments)
-      .values(comment)
-      .returning();
-    return postComment;
+  async createPostComment(comment: InsertPostComment): Promise<SharedPostComment> {
+    const postComment = await prisma.postComment.create({ data: comment as any });
+    return postComment as unknown as SharedPostComment;
   }
 
-  async getPostComments(postId: string): Promise<Array<PostComment & { user: User }>> {
-    const comments = await db
-      .select({
-        comment: postComments,
-        user: users,
-      })
-      .from(postComments)
-      .leftJoin(users, eq(postComments.userId, users.id))
-      .where(eq(postComments.postId, postId))
-      .orderBy(postComments.createdAt);
-
-    return comments.map(({ comment, user }) => ({
-      ...comment,
-      user: user!,
-    }));
+  async getPostComments(postId: string): Promise<Array<SharedPostComment & { user: SharedUser }>> {
+    const comments = await prisma.postComment.findMany({ where: { postId }, include: { user: true }, orderBy: { createdAt: 'asc' } });
+    return comments as unknown as Array<SharedPostComment & { user: SharedUser }>;
   }
 
   // Mood operations
-  async createMoodEntry(mood: InsertMoodEntry): Promise<MoodEntry> {
-    const [moodEntry] = await db
-      .insert(moodEntries)
-      .values(mood)
-      .returning();
-    return moodEntry;
+  async createMoodEntry(mood: InsertMoodEntry): Promise<SharedMoodEntry> {
+    const moodEntry = await prisma.moodEntry.create({ data: mood as any });
+    return moodEntry as unknown as SharedMoodEntry;
   }
 
-  async getMoodEntries(userId: string, days = 7): Promise<MoodEntry[]> {
+  async getMoodEntries(userId: string, days = 7): Promise<SharedMoodEntry[]> {
     const since = new Date();
     since.setDate(since.getDate() - days);
-
-    return await db
-      .select()
-      .from(moodEntries)
-      .where(and(
-        eq(moodEntries.userId, userId),
-        sql`${moodEntries.createdAt} >= ${since}`
-      ))
-      .orderBy(desc(moodEntries.createdAt));
+    return await prisma.moodEntry.findMany({ where: { userId, createdAt: { gte: since } }, orderBy: { createdAt: 'desc' } }) as unknown as SharedMoodEntry[];
   }
 
   // AI conversation operations
-  async createAiConversation(conversation: InsertAiConversation): Promise<AiConversation> {
-    const [aiConversation] = await db
-      .insert(aiConversations)
-      .values(conversation)
-      .returning();
-    return aiConversation;
+  async createAiConversation(conversation: InsertAiConversation): Promise<SharedAiConversation> {
+    const aiConversation = await prisma.aiConversation.create({ data: conversation as any });
+    return aiConversation as unknown as SharedAiConversation;
   }
 
-  async getAiConversations(userId: string, limit = 50): Promise<AiConversation[]> {
-    return await db
-      .select()
-      .from(aiConversations)
-      .where(eq(aiConversations.userId, userId))
-      .orderBy(desc(aiConversations.createdAt))
-      .limit(limit);
+  async getAiConversations(userId: string, limit = 50): Promise<SharedAiConversation[]> {
+    return await prisma.aiConversation.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, take: limit }) as unknown as SharedAiConversation[];
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new DatabaseStorage(); 
