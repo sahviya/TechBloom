@@ -67,7 +67,7 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  // Bind to localhost; if port is in use during development, retry next ports
+  // Bind to all interfaces (important for Render)
   const tryListen = (p: number, attemptsLeft: number) => {
     const onError = (err: any) => {
       if (app.get("env") === "development" && err?.code === "EADDRINUSE" && attemptsLeft > 0) {
@@ -80,7 +80,7 @@ app.use((req, res, next) => {
     };
 
     server.once("error", onError);
-    server.listen(p, "127.0.0.1", () => {
+    server.listen(p, "0.0.0.0", () => {   // 🔥 changed from 127.0.0.1 to 0.0.0.0
       server.off("error", onError);
       log(`serving on port ${p}`);
     });
