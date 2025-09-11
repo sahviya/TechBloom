@@ -16,3 +16,6 @@ vite.config.ts.*
 
 # Environment variables
 .env
+# Ignore SQLite databases
+*.db
+prisma/dev.db
