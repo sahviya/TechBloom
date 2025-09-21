@@ -54,6 +54,7 @@ function Router() {
             <main className="flex-1 pb-16 md:pb-0">
               <Switch>
                 <Route path="/" component={Dashboard} />
+                <Route path="/dashboard" component={Dashboard} />
                 <Route path="/journal" component={Journal} />
                 <Route path="/community" component={Community} />
                 <Route path="/snap" component={Snap} />

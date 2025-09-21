@@ -26,15 +26,40 @@ export async function register(req: Request, res: Response) {
 
 export async function login(req: Request, res: Response) {
   try {
+    console.log("Login attempt for:", req.body.email);
+    
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: "Missing email or password" });
+    if (!email || !password) {
+      console.log("Missing credentials");
+      return res.status(400).json({ error: "Missing email or password" });
+    }
+    
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+    if (!user) {
+      console.log("User not found:", email);
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+    
     const ok = await bcrypt.compare(password, user.password);
-    if (!ok) return res.status(401).json({ error: "Invalid credentials" });
+    if (!ok) {
+      console.log("Invalid password for:", email);
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+    
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "7d" });
-    return res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+    console.log("Login successful for:", email);
+    
+    return res.json({ 
+      token, 
+      user: { 
+        id: user.id, 
+        email: user.email, 
+        name: user.name,
+        profileImageUrl: user.profileImageUrl 
+      } 
+    });
   } catch (err) {
+    console.error("Login error:", err);
     return res.status(500).json({ error: "Server error" });
   }
 }
@@ -55,11 +80,14 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
 
 export async function googleLogin(req: Request, res: Response) {
   try {
+    console.log("Starting Google login process");
     if (!googleClient) {
+      console.error("Google client not configured. GOOGLE_CLIENT_ID:", GOOGLE_CLIENT_ID);
       return res.status(500).json({ error: "Google client not configured" });
     }
 
     const { idToken } = req.body as { idToken?: string };
+    console.log("Received idToken:", idToken ? "present" : "missing");
     if (!idToken) return res.status(400).json({ error: "Missing idToken" });
 
     const ticket = await googleClient.verifyIdToken({ idToken, audience: GOOGLE_CLIENT_ID });

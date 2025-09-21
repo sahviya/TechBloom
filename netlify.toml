@@ -1,0 +1,28 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+  functions = "netlify/functions"
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ./package-lock.json"
+
+[build.environment]
+  NODE_VERSION = "18"
+  NODE_ENV = "production"
+  VITE_REDIRECT_URI_PROD = "https://mindbloom-genie.netlify.app/dashboard"
+  VITE_REDIRECT_URI_LOCAL = "http://localhost:5000/dashboard"
+  VITE_APP_URL = "https://mindbloom-genie.netlify.app"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/server/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true
+
+[functions]
+  node_bundler = "esbuild"
+  directory = "netlify/functions"

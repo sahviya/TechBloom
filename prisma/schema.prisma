@@ -1,4 +1,4 @@
-generator client {
+my schema.prism file generator client {
   provider = "prisma-client-js"
 }
 
