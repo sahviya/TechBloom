@@ -1,8 +1,8 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 const API_BASE_URL = import.meta.env.PROD 
-  ? 'https://aesthetic-sorbet-0a4bdb.netlify.app/.netlify/functions/server'
-  : '';
+  ? 'https://mindbloomgenie.netlify.app/.netlify/functions/server'
+  : '/api';
 
 function getAuthHeaders(): HeadersInit {
   const token = localStorage.getItem("auth_token");
@@ -26,37 +26,37 @@ export async function apiRequest(
   path: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const url = `${API_BASE_URL}${path}`;
+  const url = path.startsWith('http') ? path : `${API_BASE_URL}${path}`;
   const token = localStorage.getItem("auth_token");
-  const headers: Record<string, string> = {
-    ...(data ? { "Content-Type": "application/json" } : {}),
-    ...(token ? { Authorization: `Bearer ${token}` } : {})
-  };
-  
-  console.log(`Making API request to: ${url}`, { 
-    method, 
-    hasAuthToken: !!token
-  });
-  
-  const res = await fetch(url, {
+  const response = await fetch(url, {
     method,
-    headers,
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...(data ? { body: JSON.stringify(data) } : {}),
   });
-
-  await throwIfResNotOk(res);
-  return res;
+  
+  if (!response.ok) {
+    if (response.status === 401) {
+      localStorage.removeItem("auth_token");
+    }
+    throw new Error(`${response.status}: ${response.statusText}`);
+  }
+  
+  return response;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
+
+export const getQueryFn = <T>(options: {
   on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
+}): QueryFunction<T> => {
+  return async ({ queryKey }) => {
     // Ensure the path starts with / but doesn't have double //
-    const path = queryKey.join("/").startsWith("/") ? queryKey.join("/") : `/${queryKey.join("/")}`;
+    const path = queryKey.join("/").startsWith("/") 
+      ? queryKey.join("/") 
+      : `/${queryKey.join("/")}`;
     const url = `${API_BASE_URL}${path}`;
     
     console.log(`Making query request to: ${url}`);
@@ -68,13 +68,15 @@ export const getQueryFn: <T>(options: {
       },
     });
 
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+    if (options.on401 === "returnNull" && res.status === 401) {
+      localStorage.removeItem("auth_token");
       return null;
     }
 
     await throwIfResNotOk(res);
     return await res.json();
   };
+};
 
 export const queryClient = new QueryClient({
   defaultOptions: {

@@ -13,7 +13,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5000',
-  'https://aesthetic-sorbet-0a4bdb.netlify.app'
+  'https://mindbloomgenie.netlify.app'
 ];
 
 app.use(cors({
