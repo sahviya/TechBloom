@@ -307,7 +307,10 @@ export default function Login() {
           </p>
           
           {/* Google Sign In Button */}
-          <div id="googleSignIn" className="w-full mb-4"></div>
+          <div id="googleSignIn" className="w-full mb-2"></div>
+          <p className="text-center text-sm text-muted-foreground mb-4">
+            Note: If sign in with Google fails, please create and sign in manually with email
+          </p>
           
           <div className="relative flex items-center justify-center text-sm my-8">
             <span className="px-2 bg-background text-muted-foreground">or continue with email</span>
