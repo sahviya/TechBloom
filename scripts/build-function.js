@@ -1,4 +1,5 @@
-const { build } = require('esbuild');
+const { build } = 
+require('esbuild');
 const path = require('path');
 
 async function buildFunction() {

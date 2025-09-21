@@ -14,8 +14,28 @@ export default defineConfig({
     outDir: '../dist',
     emptyOutDir: true,
     assetsDir: 'assets',
+    chunkSizeWarningLimit: 800,
     rollupOptions: {
       input: path.resolve(__dirname, 'client/index.html'),
+      output: {
+        manualChunks: {
+          'vendor': [
+            'react',
+            'react-dom',
+            'wouter',
+            '@tanstack/react-query',
+          ],
+          'ui': [
+            '@radix-ui/react-accordion',
+            '@radix-ui/react-alert-dialog',
+            '@radix-ui/react-avatar',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+          ]
+        }
+      }
     },
   },
   base: '/',
