@@ -26,19 +26,25 @@ It combines self-help resources, mindfulness exercises, AI guidance, and a suppo
 ## 🎨 Screenshots
 
 **Dashboard**
+<img width="1915" height="1079" alt="Screenshot 2025-09-11 181934" src="https://github.com/user-attachments/assets/03191182-419c-492f-b8fd-269cce0a3059" />
+<img width="1919" height="1079" alt="Screenshot 2025-09-12 102220" src="https://github.com/user-attachments/assets/16bc1bbe-ac85-4603-a921-c308495302ae" />
 
 
 
 
 **AI Genie Assistant**  
-![AI Assistant](https://link-to-your-screenshot.com/assistant.png)
+<img width="1919" height="1079" alt="Screenshot 2025-09-12 102132" src="https://github.com/user-attachments/assets/c6f9fcc1-e751-4da8-8f9a-dde7d1ad818a" />
+
 
 **Smart Journal**  
-![Journal](https://link-to-your-screenshot.com/journal.png)
+<img width="1919" height="1079" alt="Screenshot 2025-09-12 100744" src="https://github.com/user-attachments/assets/038b8e64-4957-4518-a189-f5b027aded2c" />
 
-*(Replace the URLs with your actual screenshot links or add images locally in your repo)*
+**Community** 
+<img width="1919" height="1079" alt="Screenshot 2025-09-12 100832" src="https://github.com/user-attachments/assets/320fdfa0-c71b-48bb-8def-8191939dc28a" />
+<img width="1919" height="1079" alt="Screenshot 2025-09-12 100935" src="https://github.com/user-attachments/assets/5d1570ff-47d7-4614-acbe-983b3f4d2499" />
 
----
+
+
 
 ## 🛠 Tech Stack
 
